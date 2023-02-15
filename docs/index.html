@@ -1,0 +1,195 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <style>
+        body {
+            padding: 100px;
+            width: 1000px;
+            margin: auto;
+            text-align: left;
+            font-weight: 300;
+            font-family: 'Open Sans', sans-serif;
+            color: #121212;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+    </style>
+    <title>CS 184 Rasterizer</title>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet" />
+</head>
+
+
+<body>
+
+    <h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2022</h1>
+    <h1 align="middle">Project 1: Rasterizer</h1>
+    <h2 align="middle">Catherine Nguyen, CS184</h2>
+
+    <br /><br />
+
+          <div>
+
+              <h2 align="middle">Overview</h2>
+              <p>This project is a thorough beginning into computer graphics. Rasterization takes the basic concept of drawing point, lines, and eventually triangles to create and render a view. These basic concepts can be further refined through linear interpolation, supersampling, and matrix transformations.</p>
+
+              <h2 align="middle">Section I: Rasterization</h2>
+
+              <h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+
+              <p>Given three points, we use the line test to determine if a point (x, y) is within the triangle that is created by three intersecting half planes. The function "within_triangle" is a helper function which calculates whether a point is within a triangle using the line test formula from lecture and returns a boolean. Using some linear algebra, we know that the determinant of a matrix 3x3 for coordinates can tell whether the points are in a counterclockwise order if the determinant is > 0. If the determinant < 0, then we swap the coordinates and any of their relevant properties (for future convenience). Essentially, it makes sure that everything is in one direction. Then, we loop through a border smaller than our framebuffer that frames all the points in the triangle. </p>
+
+              <p> This algorithm is no worse than one that checks each sample within a bounding box of the triangle because it does exactly that. The minimum x, y values and maximum x,y values were selected from our given coordinates and just traverses within those boundaries and draws a pixel if the within_triangle evaluates to true.</p>
+
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/test4.png" align="middle" width="400" />
+                              <figcaption align="center">Basic triangles rasterized.</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+
+              <h3 align="middle">Part 2: Antialiasing triangles</h3>
+              <p> To implement supersampling into the basic triangle rasterizatoin algorithm, we can imagine dividing a pixel/square into the square root of our sample rate. The supersample rasterization process is not dissimilar to our basic one. We then rescale the framebuffer to basically treat the dividing pixel into their own pixel. Each of these new pixels will have their own RGB weight which will be averaged together when we downscale back to our framebuffer's original dimensions. The algorithm iterates over the bound box we established in Task 1, but uses points calculated from the pixel divided by the sample rate. To accommodate more points, we add for loops which increment by the square root of the sample rate. This allows us to navigate and sample the framebuffer more rigorously.</p>
+              <p> Supersampling is useful because it gives us more information to work with when rendering as opposed to discrete, binary matrices of pixels. </p>
+
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/test4ss1.png" align="middle" width="400" />
+                              <figcaption align="center">Sharp, broken lines.</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/test4ss4.png" align="middle" width="400" />
+                              <figcaption align="center">You can see the colors and pixels averaging out.</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/test4ss16.png" align="middle" width="400" />
+                              <figcaption align="center">Here with 16px sample rate, the edges really blend.</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+
+              <h3 align="middle">Part 3: Transforms</h3>
+              <p> I tried to make the robot do a little spider-like pose.</p>
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/jiggy.png" align="middle" width="400" />
+                              <figcaption align="center">Robot dude is getting jiggy with it.</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+
+
+              <h2 align="middle">Section II: Sampling</h2>
+
+              <h3 align="middle">Part 4: Barycentric coordinates</h3>
+              <p> When imagining Barycentric coordinates and its application, I liken it to choosing colors from an editing tool's color selection eyedropper tool on an extremely zoomed in image. You can see the range of colors it goes through and how further away from the original point you go, the more different the color/shade will be. I suppose the barycentric principle is exactly what the eyedropper tool uses. </p>
+
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/eye.png" align="middle" width="400" />
+                              <figcaption align="center">Sharp, broken lines.</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/test7.png" align="middle" width="400" />
+                              <figcaption align="center">You can see the colors and pixels averaging out.</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+              <h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+              <p> Pixel sampling takes the screen sample pixel and translates it to a texture sample via some coordinate function. This process is similar to translating different coordinate systems in mathematics such as cartesian to polar coordinates. However, the screen to texture conversion is not 1:1 or a clean integer number. To get our texture coordinate, we overlay the texture system and screen system, and select four points that surround the original point.We use bilinear interpolation to get a texture coordinate that is as close as possible to the screen coordinate. Based on how close the surrounding points were, we give each direction an average weight to get an estimated coordinate. </p>
+
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/campns1.png" align="middle" width="400" />
+                              <figcaption align="center">The slats of the campanile are terribly pixelated, overly sharp image. [Nearest sampling 1px] </figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/campns16.png" align="middle" width="400" />
+                              <figcaption align="center">The slats are more distinguishable and the colors are more blended in this nearest sampling 16px image.</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/campbs1.png" align="middle" width="400" />
+                              <figcaption align="center">The outline of the building is less sharp compared to the nearest sampling 1px image.</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/campbs16.png" align="middle" width="400" />
+                              <figcaption align="center"> Image is most soft looking, details are easier to see and distinguish. [Bilinear sampling 16px]</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+              <h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+              <p> Level sampling uses downsampling which condenses the details of an image. It optimizes low-resolution by not taking as many samples and high-resolution by taking more samples. For level sampling, the tradeoff is sampling more pixels, but you also see more aliasing for lower levels. As you go up in levels, the aliasing is softened, but you lose detail. Nearest level sampling is quick and light in memory usage, but antialiasing power is not as refined. Bilinear level sampling uses two levels and averages out the result. This method is conceptually more continuous than something suchas nearest level sampling which takes the nearest texel or zero level sampling which samples everything. As mentioned, zero level sampling offers the most pixels, but also the least antialiasing. </p>
+
+              <div align="center">
+                  <table style="width:100%">
+                      <tr>
+                          <td>
+                              <img src="./images/lzpn.png" align="middle" width="400" />
+                              <figcaption align="center"> L_ZERO and P_NEAREST </figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/lzpl.png" align="middle" width="400" />
+                              <figcaption align="center">L_ZERO and P_LINEAR</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/lnpn.png" align="middle" width="400" />
+                              <figcaption align="center"> L_NEAREST and P_NEAREST</figcaption>
+                          </td>
+                      </tr>
+                      <tr>
+                          <td>
+                              <img src="./images/lnpl.png" align="middle" width="400" />
+                              <figcaption align="center"> L_NEAREST and P_LINEAR</figcaption>
+                          </td>
+                      </tr>
+                  </table>
+              </div>
+
+              <h2 align="middle">Section III: Art Competition</h2>
+              <p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+              <h3 align="middle">Part 7: Draw something interesting!</h3>
+              <a href="https://cal-cs184-student.github.io/p1-rasterizer-sp23-184-cn-write-up/">Github Pages!</a>
+          </div>
+
+</body>
+</html>
